@@ -13,7 +13,7 @@ results = tune.run(PPOTrainer, config={
     "env": HighActionSoccerEnv,
     "env_config": {
             "defense_npcs": 1,
-            " feature_set": hfo_py.LOW_LEVEL_FEATURE_SET ,
+           # " feature_set": hfo_py.LOW_LEVEL_FEATURE_SET ,
         },
     "lr": 0.001,
     "num_workers": 1,
