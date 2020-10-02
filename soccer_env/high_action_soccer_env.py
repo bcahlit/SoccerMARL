@@ -146,7 +146,7 @@ class HighActionSoccerEnv(gym.Env, utils.EzPickle):
         reward = self._get_reward()
         ob = self.env.getState()
         episode_over = self.status != hfo_py.IN_GAME
-        return ob, reward, episode_over, {'status': STATUS_LOOKUP[self.status]}
+        return ob, reward, episode_over, {'status': self.status}
 
     def _take_action(self, action):
         """ Converts the action space into an HFO action. """
