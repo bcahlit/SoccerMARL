@@ -39,9 +39,12 @@ class HighActionSoccerEnv(gym.Env, utils.EzPickle):
         self.server_port = None
         self.hfo_path = hfo_py.get_hfo_path()
         print(self.hfo_path)
-        self._configure_environment()
+        self._configure_environment(config)
         self.env = hfo_py.HFOEnvironment()
-        self.env.connectToServer(config_dir=hfo_py.get_config_path(), server_port=self.server_port)
+        if  "feature_set" in config :
+            self.env.connectToServer( feature_set=config['feature_set'], config_dir=hfo_py.get_config_path(), server_port=self.server_port)
+        else :
+            self.env.connectToServer( config_dir=hfo_py.get_config_path(), server_port=self.server_port)
         print("Shape =",self.env.getStateSize())
         self.observation_space = spaces.Box(low=-1, high=1,
                                             shape=((self.env.getStateSize(),)), dtype=np.float32)
@@ -63,13 +66,21 @@ class HighActionSoccerEnv(gym.Env, utils.EzPickle):
         if self.viewer is not None:
             os.kill(self.viewer.pid, signal.SIGKILL)
 
-    def _configure_environment(self):
+    def _configure_environment(self, config):
         """
         Provides a chance for subclasses to override this method and supply
         a different server configuration. By default, we initialize one
         offense agent against no defenders.
         """
-        self._start_hfo_server()
+
+        defense_npcs = 0
+        offense_npcs = 0
+        if  "defense_npcs" in config :
+            defense_npcs=config['defense_npcs']
+        if   "offense_npcs" in config :
+            offense_npcs=config['offense_npcs']
+
+        self._start_hfo_server(defense_npcs=defense_npcs, offense_npcs=offense_npcs)
 
     def _start_hfo_server(self, frames_per_trial=500,
                           #untouched_time=1000, 
