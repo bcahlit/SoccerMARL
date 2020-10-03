@@ -72,15 +72,8 @@ class HighActionSoccerEnv(gym.Env, utils.EzPickle):
         a different server configuration. By default, we initialize one
         offense agent against no defenders.
         """
-
-        defense_npcs = 0
-        offense_npcs = 0
-        if  "defense_npcs" in config :
-            defense_npcs=config['defense_npcs']
-        if   "offense_npcs" in config :
-            offense_npcs=config['offense_npcs']
-
-        self._start_hfo_server(defense_npcs=defense_npcs, offense_npcs=offense_npcs)
+    
+        self._start_hfo_server(**config['server_config'])
 
     def _start_hfo_server(self, frames_per_trial=500,
                           #untouched_time=1000, 
