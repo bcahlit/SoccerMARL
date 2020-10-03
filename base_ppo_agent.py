@@ -10,7 +10,7 @@ from soccer_env.high_action_soccer_env import HighActionSoccerEnv
 
 def on_episode_end(info):
     episode = info["episode"]
-    episode.custom_metrics["goal_rate"] = episode.last_info_for()['status'] == hfo_py.GOAL
+    episode.custom_metrics["goal_rate"] = int(episode.last_info_for()['status'] == hfo_py.GOAL)
 
 stop = {
        "timesteps_total": 100000,
