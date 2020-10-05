@@ -12,11 +12,14 @@ stop = {
 results = tune.run(PPOTrainer, config={
     "env": HighActionSoccerEnv,
     "env_config": {
-            "defense_npcs": 1,
-           # " feature_set": hfo_py.LOW_LEVEL_FEATURE_SET ,
+            "server_config":{
+                "defense_npcs": 1,
+            },
+           " feature_set": hfo_py.LOW_LEVEL_FEATURE_SET ,
         },
     "lr": 0.001,
     "num_workers": 1,
+    "num_gpus": 0.2,
     "lr": 1e-4,  # try different lrs
     "framework": 'torch'
 }, stop=stop)  # "log_level": "INFO" for verbose,
