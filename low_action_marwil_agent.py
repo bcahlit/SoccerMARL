@@ -25,8 +25,6 @@ results = tune.run(
         "evaluation_config":{
             "input": "sampler"},
         "beta": 1.0,  # Compare to behavior cloning (beta=0.0).
-        "lr": 0.001,
-        "num_workers": 1,
         "num_gpus": 1,
         "framework": 'torch',
         "input": "filePath"
