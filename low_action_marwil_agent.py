@@ -1,7 +1,7 @@
 import hfo_py
 from ray import tune
 from ray.rllib.agents.marwil import MARWILTrainer
-from agents.marwil_soccer import MARWILSTrainer
+from agents.marwil_soccer import MARWILSTrainer, MARWILSModel
 from ray.tune import grid_search
 
 from soccer_env.low_action_score_goal import LowActionSoccerEnv
@@ -21,6 +21,9 @@ results = tune.run(
         "model":{
             "fcnet_hiddens": [2048,1024,512,256,128],
             # "fcnet_activation": "swish"
+            "custom_model": MARWILSModel,
+            # Extra kwargs to be passed to your model's c'tor.
+            "custom_model_config": {},
         },
         "evaluation_num_workers": 1,
         "evaluation_interval": 1,
@@ -30,6 +33,6 @@ results = tune.run(
         "beta": 1.0,  # Compare to behavior cloning (beta=0.0).
         "num_gpus": 1,
         "framework": 'torch',
-        "input": "filePath"
+        "input": "/tmp/demo-out/output-2020-11-05_16-31-54_worker-0_0.json"
     },
     stop=stop)  # "log_level": "INFO" for verbose,
