@@ -33,6 +33,6 @@ results = tune.run(
         "beta": 1.0,  # Compare to behavior cloning (beta=0.0).
         "num_gpus": 1,
         "framework": 'torch',
-        "input": "/tmp/demo-out/output-2020-11-05_16-31-54_worker-0_0.json"
+        "input": "filePath"
     },
     stop=stop)  # "log_level": "INFO" for verbose,
