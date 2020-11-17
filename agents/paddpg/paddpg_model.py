@@ -1,12 +1,13 @@
 import logging
 import numpy as np
+import gym
 
+from ray.rllib.utils.spaces.space_utils import flatten_space
 from ray.rllib.models.torch.torch_modelv2 import TorchModelV2
 from ray.rllib.models.torch.misc import SlimFC, AppendBiasLayer, \
     normc_initializer
 from ray.rllib.utils.annotations import override
-from ray.rllib.utils.framework import try_import_torch
-
+from ray.rllib.utils.framework import try_import_torch, get_activation_fn
 torch, nn = try_import_torch()
 
 logger = logging.getLogger(__name__)
@@ -64,6 +65,31 @@ class MultiActionFC(nn.Module):
         # print("ap.shape", ap.shape)
         return torch.cat([at, ap],1)
 
+
+def get_action_dim(action_space: gym.Space):
+    """Returns action dim,
+
+    Args:
+        action_space (Space): Action space of the target gym env.
+    Returns:
+        
+    """
+
+    if isinstance(action_space, gym.spaces.Discrete):
+        return action_space.n
+    elif isinstance(action_space, (gym.spaces.Box)):
+        return  np.product(action_space.shape)*2 # 对角高斯
+    elif isinstance(action_space, (gym.spaces.Tuple, gym.spaces.Dict)):
+        flat_action_space = flatten_space(action_space)
+        size = 0
+        all_discrete = True
+        for i in range(len(flat_action_space)):
+            size += get_action_dim(flat_action_space[i])
+        return size
+    else:
+        raise NotImplementedError(
+            "Action space {} not supported".format(action_space))
+
 class PADDPGTorchModel(TorchModelV2, nn.Module):
     """Extension of standard TorchModelV2 for DDPG.
 
@@ -106,18 +132,22 @@ class PADDPGTorchModel(TorchModelV2, nn.Module):
         super(PADDPGTorchModel, self).__init__(obs_space, action_space,
                                              num_outputs, model_config, name)
 
-        self.bounded = np.logical_and(self.action_space.bounded_above,
-                                      self.action_space.bounded_below).any()
-        low_action = nn.Parameter(
-            torch.from_numpy(self.action_space.low).float())
-        low_action.requires_grad = False
-        self.register_parameter("low_action", low_action)
-        action_range = nn.Parameter(
-            torch.from_numpy(self.action_space.high -
-                             self.action_space.low).float())
-        action_range.requires_grad = False
-        self.register_parameter("action_range", action_range)
-        self.action_dim = np.product(self.action_space.shape)
+        self.bounded = False
+        # self.bounded = np.logical_and(self.action_space.bounded_above,
+        #                               self.action_space.bounded_below).any()
+        # low_action = nn.Parameter(
+        #     torch.from_numpy(self.action_space.low).float())
+        # low_action.requires_grad = False
+        # self.register_parameter("low_action", low_action)
+        # action_range = nn.Parameter(
+        #     torch.from_numpy(self.action_space.high -
+        #                      self.action_space.low).float())
+        # action_range.requires_grad = False
+        # self.register_parameter("action_range", action_range)
+        
+        self.action_dist_dim = get_action_dim(self.action_space)
+        #TODO　这个地方可以更加灵活
+        self.action_dim = 6
 
         # Build the policy network.
         self.policy_model = nn.Sequential()
@@ -143,7 +173,7 @@ class PADDPGTorchModel(TorchModelV2, nn.Module):
             "action_out",
             SlimFC(
                 ins,
-                self.action_dim,
+                self.action_dist_dim,
                 initializer=torch.nn.init.xavier_uniform_,
                 activation_fn=None))
 
@@ -168,6 +198,7 @@ class PADDPGTorchModel(TorchModelV2, nn.Module):
             # through the NN. For discrete actions, only obs.
             q_net = nn.Sequential()
             ins = self.obs_ins + self.action_dim
+            print("ins:", ins, self.obs_ins, self.action_dim)
             for i, n in enumerate(critic_hiddens):
                 q_net.add_module(
                     "{}_hidden_{}".format(name_, i),
@@ -207,6 +238,8 @@ class PADDPGTorchModel(TorchModelV2, nn.Module):
         Returns:
             tensor of shape [BATCH_SIZE].
         """
+        print("model_out", model_out.shape)
+        print("actions", actions.shape)
         return self.q_model(torch.cat([model_out, actions], -1))
 
     def get_twin_q_values(self, model_out, actions):

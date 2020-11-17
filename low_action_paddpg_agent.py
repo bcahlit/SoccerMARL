@@ -28,7 +28,7 @@ results = tune.run(
         },
         "lr": 0.001,
         "num_workers": 1,
-        "num_gpus": 1,
+        "num_gpus": 0,
         "lr": 1e-4,  # try different lrs
         "framework": 'torch'
     },

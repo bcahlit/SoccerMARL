@@ -62,6 +62,32 @@ def build_paddpg_models(policy, observation_space, action_space, config):
 
     return policy.model
 
+
+# def action_sampler_fn(policy, model, input_dict, state, explore, timestep):
+#     """Action sampler function has two phases. During the prefill phase,
+#     actions are sampled uniformly [-1, 1]. During training phase, actions
+#     are evaluated through DreamerPolicy and an additive gaussian is added
+#     to incentivize exploration.
+#     """
+#     obs = input_dict["obs"]
+
+#     # Custom Exploration
+#     if timestep <= policy.config["prefill_timesteps"]:
+#         logp = [0.0]
+#         # Random action in space [-1.0, 1.0]
+#         action = 2.0 * torch.rand(1, model.action_space.shape[0]) - 1.0
+#         state = model.get_initial_state()
+#     else:
+#         # Weird RLLib Handling, this happens when env rests
+#         if len(state[0].size()) == 3:
+#             # Very hacky, but works on all envs
+#             state = model.get_initial_state()
+#         action, logp, state = model.policy(obs, state, explore)
+
+#     policy.global_timestep += policy.config["action_repeat"]
+
+#     return action, logp, state
+
 def get_distribution_inputs_and_class(policy,
                                       model,
                                       obs_batch,
@@ -74,10 +100,13 @@ def get_distribution_inputs_and_class(policy,
         "is_training": is_training,
     }, [], None)
     dist_inputs = model.get_policy_output(model_out)
-    return dist_inputs, TorchMultiActionDistribution, []  # []=state out
+    dist_class, logit_dim = ModelCatalog.get_action_dist(
+                    model.action_space, policy.config["model"], framework="torch")
+    return dist_inputs, dist_class, []  # []=state out
 
 PADDPGTorchPolicy = DDPGTorchPolicy.with_updates(
     # loss_fn=paddpg_loss,
+    # action_sampler_fn=action_sampler_fn,
     validate_spaces=None,
     action_distribution_fn=get_distribution_inputs_and_class,
     make_model_and_action_dist=None,
