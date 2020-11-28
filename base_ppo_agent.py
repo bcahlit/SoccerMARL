@@ -20,7 +20,13 @@ results = tune.run(PPOTrainer, config={
     "env": HighActionSoccerEnv,
     "lr": 0.001,
     "num_workers": 1,
-    "lr": grid_search([1e-2, 1e-4, 1e-6]),  # try different lrs
+    "env_config": {
+        "server_config":{
+            "defense_npcs": 1,
+        },
+        " feature_set": hfo_py.LOW_LEVEL_FEATURE_SET ,
+    },
+    # "lr": grid_search([1e-2, 1e-4, 1e-6]),  # try different lrs
     "callbacks": {
         "on_episode_end": on_episode_end,
     },
