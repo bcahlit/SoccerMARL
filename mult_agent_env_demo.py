@@ -8,8 +8,8 @@ from gym.utils import seeding
 from single_agent_env_demo import SingleAgentEnv
 import socket
 from contextlib import closing
-import ray#
-import time#
+import ray
+import time
 
 try:
     import hfo_py
@@ -53,12 +53,14 @@ def make_multiagent(env_name_or_creator):
             #     ]
             # else:
             # time.sleep(5)
-            print("create single")
-            self.agents = [env_name_or_creator.remote(config, self.server_port) for _ in range(self.num)]
-            print("complate create")
+            self.agents = []
+            for i in range(self.num):
+                self.agents.append(env_name_or_creator.remote(config, self.server_port))
+                time.sleep(2)
             self.dones = set()
-            self.observation_space = ray.get(self.agents[0].get_observation_space.remote())
-            self.action_space = ray.get(self.agents[0].get_action_space.remote())
+            # self.observation_space = ray.get(self.agents[0].get_observation_space.remote())
+            # self.action_space = ray.get(self.agents[0].get_action_space.remote())
+
 
         
         def _configure_environment(self, config):
@@ -105,19 +107,21 @@ def make_multiagent(env_name_or_creator):
             if not log_game:  cmd += " --no-logging"
             print('Starting server with command: %s' % cmd)
             self.server_process = subprocess.Popen(cmd.split(' '), shell=False)
-            time.sleep(10) # Wait for server to startup before connecting a player
+            time.sleep(5) # Wait for server to startup before connecting a player
         def __del__(self):#note
             for i in range(num):
                 self.agents[i].__del__.remote()
 
         def reset(self):
             self.dones = set()
-            return {i: ray.get(a.reset.remote()) for i, a in enumerate(self.agents)}
+            returned = {i: ray.get(stats_id) for i, stats_id in enumerate([a.reset.remote() for a in self.agents])}
+            return returned
 
         def step(self, action_dict):
             obs, rew, done, info = {}, {}, {}, {}
-            for i, action in action_dict.items():
-                obs[i], rew[i], done[i], info[i] = ray.get(self.agents[i].step.remote(action))
+            setps = [self.agents[i].step.remote(action) for i, action in action_dict.items()]
+            for i, _step in enumerate(setps):
+                obs[i], rew[i], done[i], info[i] = ray.get(_step)
                 if done[i]:
                     self.dones.add(i)
             done["__all__"] = len(self.dones) == len(self.agents)
