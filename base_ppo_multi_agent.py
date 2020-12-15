@@ -17,6 +17,12 @@ env_config = {
         },
         " feature_set": hfo_py.LOW_LEVEL_FEATURE_SET ,
     }
+
+def on_episode_end(info):
+    episode = info["episode"]
+    # print("episode.last_info_for()", episode.last_info_for(0))
+    episode.custom_metrics["goal_rate"] = int(episode.last_info_for(0)['status'] == hfo_py.GOAL)
+
 server_config = env_config["server_config"]
 obs_space_size = 59 + 9*(server_config["defense_npcs"]+server_config["offense_agents"]-1)
 obs_space = spaces.Box(low=-1, high=1,
@@ -43,6 +49,9 @@ results = tune.run(PPOTrainer, config={
         'policies': policies,
         'policy_mapping_fn':
             lambda agent_id: policy_ids[agent_id],
+    },
+    "callbacks": {
+        "on_episode_end": on_episode_end,
     },
     "lr": 0.001,
     "num_gpus" : 0,
