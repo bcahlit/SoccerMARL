@@ -8,6 +8,8 @@ from gym.utils import seeding
 from single_agent_env_demo import SingleAgentEnv
 import socket
 from contextlib import closing
+import ray#
+import time#
 
 try:
     import hfo_py
@@ -52,11 +54,11 @@ def make_multiagent(env_name_or_creator):
             # else:
             # time.sleep(5)
             print("create single")
-            self.agents = [env_name_or_creator(config, self.server_port) for _ in range(self.num)]
+            self.agents = [env_name_or_creator.remote(config, self.server_port) for _ in range(self.num)]
             print("complate create")
             self.dones = set()
-            self.observation_space = self.agents[0].observation_space
-            self.action_space = self.agents[0].action_space
+            self.observation_space = ray.get(self.agents[0].get_observation_space.remote())
+            self.action_space = ray.get(self.agents[0].get_action_space.remote())
 
         
         def _configure_environment(self, config):
@@ -106,16 +108,16 @@ def make_multiagent(env_name_or_creator):
             time.sleep(10) # Wait for server to startup before connecting a player
         def __del__(self):#note
             for i in range(num):
-                self.agents[i].__del__()
+                self.agents[i].__del__.remote()
 
         def reset(self):
             self.dones = set()
-            return {i: a.reset() for i, a in enumerate(self.agents)}
+            return {i: ray.get(a.reset.remote()) for i, a in enumerate(self.agents)}
 
         def step(self, action_dict):
             obs, rew, done, info = {}, {}, {}, {}
             for i, action in action_dict.items():
-                obs[i], rew[i], done[i], info[i] = self.agents[i].step(action)
+                obs[i], rew[i], done[i], info[i] = ray.get(self.agents[i].step.remote(action))
                 if done[i]:
                     self.dones.add(i)
             done["__all__"] = len(self.dones) == len(self.agents)

@@ -4,7 +4,7 @@ import gym
 from gym import error, spaces
 from gym import utils
 from gym.utils import seeding
-
+import ray
 import socket
 from contextlib import closing
 
@@ -16,8 +16,8 @@ except ImportError as e:
 import logging
 logger = logging.getLogger(__name__)
 
-
-class SingleAgentEnv(gym.Env, utils.EzPickle):
+@ray.remote
+class SingleAgentEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, config, port):
@@ -25,14 +25,10 @@ class SingleAgentEnv(gym.Env, utils.EzPickle):
         self.server_port = port
         self.hfo_path = hfo_py.get_hfo_path()
         self.env = hfo_py.HFOEnvironment()
-        print("___28",port)
         if  "feature_set" in config :
             self.env.connectToServer( feature_set=config['feature_set'], config_dir=hfo_py.get_config_path(), server_port=self.server_port)
         else :
-            print("___30",port)
             self.env.connectToServer( config_dir=hfo_py.get_config_path(), server_port=self.server_port)
-            print("___32",port)
-        print("___35",port)
         self.observation_space = spaces.Box(low=-1, high=1,
                                             shape=((self.env.getStateSize(),)), dtype=np.float32)
         print("single agent init",self.observation_space)
@@ -40,15 +36,18 @@ class SingleAgentEnv(gym.Env, utils.EzPickle):
 
         self.status = hfo_py.IN_GAME
         self._seed = -1
-
+    def get_observation_space(self):
+        return self.observation_space
+    def get_action_space(self):
+        return self.action_space
     def __del__(self):
         self.env.act(hfo_py.QUIT)
         self.env.step()
         os.kill(self.server_process.pid, signal.SIGINT)
         if self.viewer is not None:
             os.kill(self.viewer.pid, signal.SIGKILL)
-
-
+    
+    @ray.method(num_returns=4)
     def step(self, action):
         self._take_action(action)
         self.status = self.env.step()
