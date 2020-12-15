@@ -90,11 +90,28 @@ class ServerDownException(Exception):
   
 
 ACTION_LOOKUP = {
-    0 : hfo_py.GO_TO_BALL,
-    1 : hfo_py.MOVE,
-    2 : hfo_py.SHOOT,
-    3 : hfo_py.DRIBBLE, # Used on defense to slide tackle the ball
-    4 : hfo_py.CATCH,  # Used only by goalie to catch the ball
+    #  0 : hfo_py.GO_TO_BALL,
+    #  1 : hfo_py.MOVE,
+    #  2 : hfo_py.SHOOT,
+    #  3 : hfo_py.DRIBBLE, # Used on defense to slide tackle the ball
+    #  4 : hfo_py.CATCH,  # Used only by goalie to catch the ball   
+    0: hfo_py.NOOP,
+    1: hfo_py.TOLEFT,
+    2: hfo_py.TOPLEFT,
+    3: hfo_py.TOP,
+    4: hfo_py.TOPRIGHT,
+    5: hfo_py.RIGHT,
+    6: hfo_py.BOTTOMRIGHT,
+    7: hfo_py.BOTTOM,
+    8: hfo_py.BOTTOMLEFT,
+
+    9: hfo_py.AUTOPASS,
+    10: hfo_py.AUTOTACKLE,
+
+    11: hfo_py.GO_TO_BALL,
+    12: hfo_py.MOVE,
+    13: hfo_py.SHOOT,
+    14: hfo_py.DRIBBLE
 }
 
 STATUS_LOOKUP = {
