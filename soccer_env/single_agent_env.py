@@ -32,7 +32,7 @@ class SingleAgentEnv(gym.Env):
         self.observation_space = spaces.Box(low=-1, high=1,
                                             shape=((self.env.getStateSize(),)), dtype=np.float32)
         print("single agent init",self.observation_space)
-        self.action_space = spaces.Discrete(4)
+        self.action_space = spaces.Discrete(15)
 
         self.status = hfo_py.IN_GAME
         self._seed = -1
@@ -100,7 +100,7 @@ ACTION_LOOKUP = {
     2: hfo_py.TOPLEFT,
     3: hfo_py.TOP,
     4: hfo_py.TOPRIGHT,
-    5: hfo_py.RIGHT,
+    5: hfo_py.TORIGHT,
     6: hfo_py.BOTTOMRIGHT,
     7: hfo_py.BOTTOM,
     8: hfo_py.BOTTOMLEFT,
