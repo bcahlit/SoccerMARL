@@ -8,7 +8,7 @@ from gym import spaces
 import numpy as np
 import hfo_py
 
-from mult_agent_env_demo import MultiAgentSoccer
+from soccer_env.mult_agent_env import MultiAgentSoccer
 
 env_config = {
         "server_config":{
