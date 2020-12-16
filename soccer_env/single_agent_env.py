@@ -52,12 +52,12 @@ class SingleAgentEnv(gym.Env):
         return self.observation_space
     def get_action_space(self):
         return self.action_space
-    def __del__(self):
-        self.env.act(hfo_py.QUIT)
-        self.env.step()
-        os.kill(self.server_process.pid, signal.SIGINT)
-        if self.viewer is not None:
-            os.kill(self.viewer.pid, signal.SIGKILL)
+    # def __del__(self):
+    #     self.env.act(hfo_py.QUIT)
+    #     self.env.step()
+    #     os.kill(self.server_process.pid, signal.SIGINT)
+    #     if self.viewer is not None:
+    #         os.kill(self.viewer.pid, signal.SIGKILL)
     
     @ray.method(num_returns=4)
     def step(self, action):

@@ -9,6 +9,8 @@ from soccer_env.single_agent_env import SingleAgentEnv
 import socket
 from contextlib import closing
 import ray
+import psutil
+
 import time
 
 try:
@@ -37,6 +39,7 @@ def make_multiagent(env_name_or_creator):
         def __init__(self, config):
             self.viewer = None
             self.server_process = None
+            self.rcspid = None
             self.server_port = None
             self.hfo_path = hfo_py.get_hfo_path()
             #print(self.hfo_path)
@@ -107,10 +110,17 @@ def make_multiagent(env_name_or_creator):
             if not log_game:  cmd += " --no-logging"
             print('Starting server with command: %s' % cmd)
             self.server_process = subprocess.Popen(cmd.split(' '), shell=False)
-            time.sleep(5) # Wait for server to startup before connecting a player
+            time.sleep(1) # Wait for server to startup before connecting a player
+            print("server_process", psutil.Process(self.server_process.pid).children(recursive=True))
+            self.rcspid = psutil.Process(self.server_process.pid).children(recursive=True)[0].pid
+            print("rcssserver_process.pid", self.rcspid)
+            time.sleep(2)
+
         def __del__(self):#note
-            for i in range(num):
-                self.agents[i].__del__.remote()
+            # not be used
+            os.kill(self.server_process.pid, signal.SIGINT)
+            # for i in range(num):
+            #     self.agents[i].__del__.remote()
 
         def reset(self):
             self.dones = set()
@@ -128,11 +138,13 @@ def make_multiagent(env_name_or_creator):
             return obs, rew, done, info
 
         def close(self):
-            if self.server_process is not None:
-                try:
-                    os.kill(self.server_process.pid, signal.SIGKILL)
-                except Exception:
-                    pass
+            # if self.server_process is not None:
+            #     try:
+            os.kill(self.rcspid, signal.SIGKILL)
+            os.kill(self.server_process.pid, signal.SIGKILL)
+            
+                # except Exception:
+                #     pass
 
         def _start_viewer(self):
         
