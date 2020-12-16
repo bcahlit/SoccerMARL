@@ -27,7 +27,7 @@ server_config = env_config["server_config"]
 obs_space_size = 59 + 9*(server_config["defense_npcs"]+server_config["offense_agents"]-1)
 obs_space = spaces.Box(low=-1, high=1,
                                             shape=((obs_space_size,)), dtype=np.float32)
-act_space = spaces.Discrete(15)
+act_space = spaces.Discrete(14)
 
 def gen_policy(_):
     return (None, obs_space, act_space, {})
