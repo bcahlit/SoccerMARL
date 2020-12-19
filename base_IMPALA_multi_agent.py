@@ -7,12 +7,13 @@ from ray.tune import grid_search
 from gym import spaces
 import numpy as np
 import hfo_py
+import torch
 
 from soccer_env.mult_agent_env import MultiAgentSoccer
 
 env_config = {
         "server_config":{
-            "defense_npcs": 0,
+            "defense_npcs": 1,
             "offense_agents":2
         },
         " feature_set": hfo_py.LOW_LEVEL_FEATURE_SET ,
@@ -39,8 +40,8 @@ policies = {
 policy_ids = list(policies.keys())
 
 stop = {
-       "timesteps_total": 100000,
-       "episode_reward_mean": 0.89
+       "timesteps_total": 20000000,
+       "episode_reward_mean": 13
        }
 results = tune.run(ImpalaTrainer, config={
     "env": MultiAgentSoccer,
@@ -54,7 +55,7 @@ results = tune.run(ImpalaTrainer, config={
         "on_episode_end": on_episode_end,
     },
     "lr": 0.0002,
-    "num_gpus" : 1,
+    "num_gpus" : 1 if torch.cuda.is_available() else 0,
     "num_workers": 5,
     "framework": 'torch'
 }, stop=stop)  

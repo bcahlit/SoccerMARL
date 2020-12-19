@@ -149,8 +149,8 @@ class SingleAgentEnv(gym.Env):
     def __EOT_reward(self):
         if self.status == hfo_py.GOAL:
             return 5.
-        elif self.status == hfo_py.CAPTURED_BY_DEFENSE:
-            return -1.
+        # elif self.status == hfo_py.CAPTURED_BY_DEFENSE:
+        #     return -1.
         return 0.
 
     def reset(self):

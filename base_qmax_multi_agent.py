@@ -75,7 +75,7 @@ results = tune.run(PPOTrainer, config={
         "on_episode_end": on_episode_end,
     },
     "lr": 0.001,
-    "num_gpus" : 0,
+    "num_gpus" : 1 if torch.cuda.is_available() else 0,
     "num_workers": 1,
     "framework": 'torch'
 }, stop=stop)  

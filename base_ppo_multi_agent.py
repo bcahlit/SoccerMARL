@@ -7,12 +7,13 @@ from ray.tune import grid_search
 from gym import spaces
 import numpy as np
 import hfo_py
+import torch
 
 from soccer_env.mult_agent_env import MultiAgentSoccer
 
 env_config = {
         "server_config":{
-            "defense_npcs": 0,
+            "defense_npcs": 1,
             "offense_agents":2
         },
         " feature_set": hfo_py.LOW_LEVEL_FEATURE_SET ,
@@ -34,13 +35,13 @@ def gen_policy(_):
 
 # Setup PPO with an ensemble of `num_policies` different policies
 policies = {
-    'policy_{}'.format(i): gen_policy(i) for i in range(server_config["offense_agents"])
+    'policy_{}'.format(i): gen_policy(i) for i in range(server_config["offense_agents"]) 
 }
 policy_ids = list(policies.keys())
 
 stop = {
-       "timesteps_total": 100000,
-       "episode_reward_mean": 0.89
+       "timesteps_total": 20000000,
+       "episode_reward_mean": 13
        }
 results = tune.run(PPOTrainer, config={
     "env": MultiAgentSoccer,
@@ -53,8 +54,8 @@ results = tune.run(PPOTrainer, config={
     "callbacks": {
         "on_episode_end": on_episode_end,
     },
-    "lr": 0.001,
-    "num_gpus" : 0,
-    "num_workers": 1,
+    "lr": grid_search([0.001, 0.0005]),
+    "num_gpus" : torch.cuda.device_count(),
+    "num_workers": 5,
     "framework": 'torch'
 }, stop=stop)  
