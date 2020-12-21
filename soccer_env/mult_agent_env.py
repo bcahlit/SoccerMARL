@@ -45,17 +45,11 @@ def make_multiagent(env_name_or_creator):
             #print(self.hfo_path)
             self._configure_environment(config)
             self.env = hfo_py.HFOEnvironment()
-                
-                
+            self.one_hot_state_encoding = config.get("one_hot_state_encoding",
+                                                     False)
             # num = config.pop("num_agents", 1)
             self.num = config["server_config"]["offense_agents"]
             
-            # if isinstance(env_name_or_creator, str):
-            #     self.agents = [
-            #         gym.make(env_name_or_creator) for _ in range(num)
-            #     ]
-            # else:
-            # time.sleep(5)
             self.agents = []
             for i in range(self.num):
                 self.agents.append(env_name_or_creator.remote(config, self.server_port))
@@ -125,6 +119,11 @@ def make_multiagent(env_name_or_creator):
         def reset(self):
             self.dones = set()
             returned = {i: ray.get(stats_id) for i, stats_id in enumerate([a.reset.remote() for a in self.agents])}
+            if self.one_hot_state_encoding:
+                returned = {
+                    0: {"obs": returned[0]},
+                    1: {"obs": returned[1]}
+                }
             return returned
 
         def step(self, action_dict):
@@ -135,6 +134,11 @@ def make_multiagent(env_name_or_creator):
                 if done[i]:
                     self.dones.add(i)
             done["__all__"] = len(self.dones) == len(self.agents)
+            if self.one_hot_state_encoding:
+                obs = {
+                    0: {"obs": obs[0]},
+                    1: {"obs": obs[1]}
+                }
             return obs, rew, done, info
 
         def close(self):
