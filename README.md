@@ -3,7 +3,11 @@
 在RLlib框架上实现rcssserver的环境。
 
 # FAQ
-
+### 开始训练：
+首先需要安装pytorch，ray，hfo，rcssserver
+使用python启动文件
+example：
+python base_IMPALA_multi_agent.py
 ###　查看训练的录像：
 
 运行中会出现这样的提示：
